@@ -1,6 +1,6 @@
-# AOC_MiniSudo_Rust_QEMU_UFRR_2024
+# Minisudo
 
-## Projeto Final de Segurança e Sistemas Operacionais
+## Projeto Final de Sistemas Operacionais
 
 ---
 
