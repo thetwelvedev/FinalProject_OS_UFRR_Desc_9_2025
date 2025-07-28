@@ -51,4 +51,5 @@ O `minisudo` é uma aplicação de terminal que simula o comportamento do `sudo`
 ---
 
 ## Referências
-<!-- Ver os livros-->
+
+- TANENBAUM, Andrew S.; WOODHULL, Albert S. Sistemas operacionais: projeto e implementação. Tradução de João Tortello. 3. ed. Porto Alegre: Bookman, 2008. Recurso eletrônico.
