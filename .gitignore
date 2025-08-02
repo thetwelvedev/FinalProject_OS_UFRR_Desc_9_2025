@@ -1,0 +1,24 @@
+# Arquivos binários gerados
+target/
+
+# Arquivos de debug e cache do Cargo
+*/.rs.bk
+*/.rlib
+
+# Configurações locais do IDE/editor (opcional)
+.vscode/
+.idea/
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+
+# Arquivos do sistema (Windows, macOS)
+Thumbs.db
+.DS_Store
+
+# Dependências externas (se usar alguma gerenciador externo)
+node_modules/
+
+# Outras pastas e arquivos temporários
+*.swp

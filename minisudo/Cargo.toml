@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 bcrypt = "0.14"
 rpassword = "7.4"
+users = "0.11"
