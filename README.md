@@ -15,7 +15,7 @@ O objetivo deste projeto é implementar uma versão simplificada do utilitário 
 1. [Descrição do Projeto](#descrição-do-projeto)  
 2. [Funcionalidades](#funcionalidades)  
 3. [Estrutura do Minisudo](#estrutura-do-minisudo)  
-4. [Relatório](#relatório)  
+4. [Artigo](#Artigo)  
 5. [Conclusão](#conclusão)  
 6. [Referências](#referências)
 ---
@@ -42,11 +42,11 @@ O `minisudo` é uma aplicação de terminal que simula o comportamento do `sudo`
 
 ## Estrutura do Minisudo
 
-## Relatório
+## Artigo
 
 <div style="font-size: 20px; font-weight: bold; color: black;">Para uma vizualização mais detalhada do relatório:</div> 
 
-* [Acesse o relatório]()
+* [Acesse o Artigo]()
 
 ---
 
