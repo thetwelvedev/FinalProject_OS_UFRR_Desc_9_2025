@@ -1,6 +1,8 @@
 extern crate bcrypt;
-use bcrypt::{DEFAULT_COST, hash, verify};
+use bcrypt::{verify};
 use users::{get_current_uid, get_user_by_uid};
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
 fn main() {
     
@@ -10,27 +12,52 @@ fn main() {
     let uid = get_current_uid();
     
     //Aqui deve ocorrer a verificação do usuário para caso ele esteja cadastrado no minisudo
-    if let Some(user) = get_user_by_uid(uid){
-        
-        //Definimos uma senha para o usuário, apenas teste.
-        let password = rpassword::prompt_password(format!("[minisudo] Digite uma senha para {}: ", user.name().to_string_lossy())).unwrap();
-        println!("Sua senha é: {}", password);
-        
-        //Senha passa pelo hash
-        let hashed = hash(password, DEFAULT_COST).unwrap();//Hash criado referente a senha
-        println!("Senha salva com sucesso!");
+    let Some(user) = get_user_by_uid(uid) else{
+        eprintln!("Erro: Usuário não encontrado!");
+        std::process::exit(1);
+    };
+    let username = user.name().to_string_lossy().into_owned();
+     
+    //let file = match File::open("/etc/minisudo_password") {
+    //Abre o arquivo minisudo_password por caminho temporário
+    let file = match File::open("./config/minisudo_password") {
+        Ok(f) => f,
+        Err(_) => {
+            eprintln!("Erro: Não foi possível abrir o arquivo minisudo_password.");
+            std::process::exit(1);
+        }
+    };
+    let reader = BufReader::new(file);
 
-        //Teste de validação de senha do usuário
-        let validation = rpassword::prompt_password(format!("[minisudo] senha para {}: ", user.name().to_string_lossy())).unwrap();
-        let valid = verify(validation, &hashed).unwrap();//Verificação da senha do usuário
-        
-        if valid {
-            println!("Sua senha foi validada com sucesso!");
-        }else {
-            println!("Erro ao tentar validar sua senha.",);
-        } 
+    let mut hash_encontrado: Option<String> = None;
 
-    }else{
-        println!("Usuário não encontrado no sistema.");
+    //Leitura do arquivo  
+    for linha in reader.lines() {
+        if let Ok(line) = linha {
+            let partes: Vec<&str> = line.trim().split(':').collect();
+            if partes.len() != 2 {
+                continue;
+            }
+
+            if partes[0] == username {
+                hash_encontrado = Some(partes[1].to_string());
+                break;
+            }
+        }
+    }
+
+    //Validação da senha
+    if let Some(hash) = hash_encontrado {
+        let senha = rpassword::prompt_password(format!("[minisudo] senha para {}: ", username)).unwrap();
+        if verify(&senha, &hash).unwrap_or(false) {
+            println!("Acesso concedido.");
+            // Aqui você pode executar o comando desejado com privilégio
+        } else {
+            eprintln!("Senha incorreta.");
+            std::process::exit(1);
+        }
+    } else {
+        eprintln!("Usuário '{}' não está autorizado no minisudoers.", username);
+        std::process::exit(1);
     }
 }
