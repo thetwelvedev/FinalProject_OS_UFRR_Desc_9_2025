@@ -1,0 +1,8 @@
+[package]
+name = "minisudo"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+bcrypt = "0.14"
+rpassword = "7.4"
