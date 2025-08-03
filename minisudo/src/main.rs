@@ -4,6 +4,9 @@ use users::{get_current_uid, get_user_by_uid};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use clap::Parser;
+use chrono::Local;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[derive(Parser)]
 #[command(name = "minisudo")]
@@ -15,8 +18,6 @@ struct Cli {
     /// Argumentos do comando
     argumentos: Vec<String>,
 }
-
-
 
 fn main() {
     
@@ -96,6 +97,30 @@ fn main() {
     if !permitido {
         eprintln!("Permissão negada: você não pode executar '{}'", args.comando);
         std::process::exit(1);
+    }
+
+    // Obter horário atual
+    let agora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    // Montar comando completo
+    let comando_completo = format!("{} {}", args.comando, args.argumentos.join(" ")).trim().to_string();
+
+    // Montar entrada de log
+    let entrada_log = format!(
+        "[{}] usuário: {}, comando: {}\n",
+        agora, username, comando_completo
+    );
+
+    // Abrir (ou criar) arquivo de log em modo append
+    let mut arquivo_log = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open("./logs/minisudo.log")
+        .expect("Erro ao abrir ou criar o arquivo de log");
+
+    // Escrever no log
+    if let Err(e) = arquivo_log.write_all(entrada_log.as_bytes()) {
+        eprintln!("Erro ao escrever no log: {}", e);
     }
 
     println!("Acesso concedido.");
