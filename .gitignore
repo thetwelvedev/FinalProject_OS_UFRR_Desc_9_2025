@@ -1,4 +1,42 @@
 # Arquivos binários gerados
+/target/
+
+# Arquivos de debug e cache do Cargo
+*/.rs.bk
+*/.rlib
+**/*.rs.bk
+
+# Configurações locais do IDE/editor (opcional)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs e arquivos temporários
+*.log
+*.tmp
+
+# Arquivos do sistema (Windows, macOS)
+Thumbs.db
+.DS_Store
+._*
+
+# Dependências externas (se usar alguma gerenciador externo)
+/node_modules/
+
+# Arquivos de ambiente
+.env
+.env.*
+
+# Arquivos de banco de dados local (se aplicável)
+*.db
+*.sqlite
+
+# Arquivos de output do compilador
+*.exe
+*.dll
+*.so
+*.dylib# Arquivos binários gerados
 target/
 
 # Arquivos de debug e cache do Cargo
