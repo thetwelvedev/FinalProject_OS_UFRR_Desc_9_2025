@@ -1,1 +1,2 @@
-alefealves /usr/bin/apt usr/bin/ls
+root ALL
+alefealves apt dnf ls

@@ -4,25 +4,28 @@ use users::{get_current_uid, get_user_by_uid};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use clap::Parser;
-use std::process::Command;
 
 #[derive(Parser)]
-#[command(author, version, about, long_about = None)]
-struct Args {
-    /// Comando a ser executado com permissão
-    #[arg(required = true)]
-    comando: Vec<String>,
+#[command(name = "minisudo")]
+#[command(about = "Executa comandos com permissões controladas", long_about = None)]
+struct Cli {
+    /// Comando a ser executado
+    comando: String,
+
+    /// Argumentos do comando
+    argumentos: Vec<String>,
 }
+
 
 
 fn main() {
     
-    let args = Args::parse();
+    let args = Cli::parse();
 
     //Pega o id do usuário atual do sistema
     let uid = get_current_uid();
     
-    //Aqui deve ocorrer a verificação do usuário para caso ele esteja cadastrado no minisudo
+    //Verificação de usuário válido
     let Some(user) = get_user_by_uid(uid) else{
         eprintln!("Erro: Usuário não encontrado!");
         std::process::exit(1);
@@ -58,31 +61,47 @@ fn main() {
     }
 
     //Validação da senha
-    if let Some(hash) = hash_encontrado {
-        let senha = rpassword::prompt_password(format!("[minisudo] senha para {}: ", username)).unwrap();
-        if verify(&senha, &hash).unwrap_or(false) {
-            println!("Acesso concedido.");
-            // Aqui você pode executar o comando desejado com privilégio
-            
-            // Executa o comando passado pelo usuário
-            let status = Command::new(&args.comando[0])
-                .args(&args.comando[1..])
-                .status();
-        
-                match status {
-                Ok(s) => std::process::exit(s.code().unwrap_or(0)),
-                Err(e) => {
-                    eprintln!("Erro ao executar o comando: {}", e);
-                    std::process::exit(1);
-                }
-            }
-            
-        } else {
-            eprintln!("Senha incorreta.");
-            std::process::exit(1);
-        }
-    } else {
+    let Some(hash) = hash_encontrado else {
         eprintln!("Usuário '{}' não está autorizado no minisudoers.", username);
         std::process::exit(1);
+    };
+
+    let senha = rpassword::prompt_password(format!("[minisudo] senha para {}: ", username)).unwrap();
+    if !verify(&senha, &hash).unwrap_or(false) {
+        eprintln!("Senha incorreta.");
+        std::process::exit(1);
     }
+
+    //Abre o arquivo minisudoers por caminho temporário
+    let file = File::open("./config/minisudoers").expect("Erro ao abrir minisudoers");
+    let reader = BufReader::new(file);
+    let mut permitido = false;
+
+    //Realiza a leitura do arquivo minisudoers e verifica se o usuário tem permissão para executar o arquivo
+    for linha in reader.lines() {
+        if let Ok(line) = linha {
+            let mut partes = line.trim().split_whitespace();
+            if let Some(user_entry) = partes.next() {
+                if user_entry == username {
+                    let comandos: Vec<&str> = partes.collect();
+                    if comandos.contains(&"ALL") || comandos.contains(&args.comando.as_str()) {
+                        permitido = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if !permitido {
+        eprintln!("Permissão negada: você não pode executar '{}'", args.comando);
+        std::process::exit(1);
+    }
+
+    println!("Acesso concedido.");
+    // Aqui você pode executar o comando desejado com privilégio
+            
+    // Simula a execução do comando passado pelo usuário
+    println!("(simulado como root) Comando '{}' executado com sucesso!", args.comando);
+
 }
