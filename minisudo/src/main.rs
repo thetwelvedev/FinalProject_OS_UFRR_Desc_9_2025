@@ -3,10 +3,21 @@ use bcrypt::{verify};
 use users::{get_current_uid, get_user_by_uid};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use clap::Parser;
+use std::process::Command;
+
+#[derive(Parser)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Comando a ser executado com permissão
+    #[arg(required = true)]
+    comando: Vec<String>,
+}
+
 
 fn main() {
     
-    //let password = rpassword::read_password().unwrap();//Lê a senha do usuário pelo terminal
+    let args = Args::parse();
 
     //Pega o id do usuário atual do sistema
     let uid = get_current_uid();
@@ -52,6 +63,20 @@ fn main() {
         if verify(&senha, &hash).unwrap_or(false) {
             println!("Acesso concedido.");
             // Aqui você pode executar o comando desejado com privilégio
+            
+            // Executa o comando passado pelo usuário
+            let status = Command::new(&args.comando[0])
+                .args(&args.comando[1..])
+                .status();
+        
+                match status {
+                Ok(s) => std::process::exit(s.code().unwrap_or(0)),
+                Err(e) => {
+                    eprintln!("Erro ao executar o comando: {}", e);
+                    std::process::exit(1);
+                }
+            }
+            
         } else {
             eprintln!("Senha incorreta.");
             std::process::exit(1);
