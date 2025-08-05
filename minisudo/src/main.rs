@@ -67,9 +67,23 @@ fn main() {
         std::process::exit(1);
     };
 
-    let senha = rpassword::prompt_password(format!("[minisudo] senha para {}: ", username)).unwrap();
-    if !verify(&senha, &hash).unwrap_or(false) {
-        eprintln!("Senha incorreta.");
+    let max_tentativas = 3;
+    let mut autenticado = false;
+
+    for tentativa in 1..=max_tentativas {
+        let senha = rpassword::prompt_password(
+            format!("[minisudo] senha para {}: ", username)
+        ).unwrap();
+        if verify(&senha, &hash).unwrap_or(false) {
+            autenticado = true;
+            break;
+        } else { 
+            eprintln!("Sinto muito, tente novamente.");
+        }
+    }
+
+    if !autenticado {
+        eprintln!("minisudo: 3 tentativas de senha incorreta.");
         std::process::exit(1);
     }
 
