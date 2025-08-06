@@ -22,6 +22,8 @@ O objetivo deste projeto é implementar uma versão simplificada do utilitário 
     - [bcrypt](#bcrypt)
     - [rpassword](#rpassword)
     - [clap](#clap)
+    - [users](#users)
+    - [chrono](#chrono)
   - [Artigo](#artigo)
   - [Referências](#referências)
 ---
@@ -63,16 +65,30 @@ minisudo/
 
 ### bcrypt
 > Usado para:
-* Criptografar senhas com o algoritmo bcrypt.
-* Verificar se uma senha corresponde ao hash.
+* Verificar se a senha digitada corresponde ao hash armazenado.
+* Garantir autenticação segura utilizando o algoritmo bcrypt.
 
 ### rpassword
 > Usado para:
-* Ler senhas no terminal sem exibir os caracteres.
+* Solicitar a senha do usuário no terminal de forma segura.
+* Impedir que os caracteres da senha apareçam enquanto o usuário digita 
 
 ### clap
 > Usado para:
 * Tratar argumentos da linha de comando.
+* Definir o nome do comando (comando) e os seus argumentos (argumentos) de forma estruturada.
+
+### users
+> Usado para:
+* Obter o UID (identificador do usuário atual)
+* Obter o nome de login do usuário com base no UID.
+* Identificar qual usuário está tentando executar o comando.
+
+### chrono
+> Usado para:
+* Obter a data e hora atual do sistema.
+* Formatar a data/hora em uma string legível.
+* Registrar a data e hora de execução dos comandos no arquivo de log.
 
 ## Artigo
 
