@@ -1,12 +1,10 @@
 extern crate bcrypt;
-use bcrypt::{verify};
+use bcrypt::verify;
 use users::{get_current_uid, get_user_by_uid};
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use std::fs::{self, File, OpenOptions};
+use std::io::{BufRead, BufReader, Write};
 use clap::Parser;
 use chrono::Local;
-use std::fs::OpenOptions;
-use std::io::Write;
 
 #[derive(Parser)]
 #[command(name = "minisudo")]
@@ -20,21 +18,19 @@ struct Cli {
 }
 
 fn main() {
-    
     let args = Cli::parse();
 
-    //Pega o id do usuário atual do sistema
+    // Pega o ID do usuário atual do sistema
     let uid = get_current_uid();
-    
-    //Verificação de usuário válido
-    let Some(user) = get_user_by_uid(uid) else{
+
+    // Verifica se o usuário é válido
+    let Some(user) = get_user_by_uid(uid) else {
         eprintln!("Erro: Usuário não encontrado!");
         std::process::exit(1);
     };
     let username = user.name().to_string_lossy().into_owned();
-     
-    //let file = match File::open("/etc/minisudo_password") {
-    //Abre o arquivo minisudo_password por caminho temporário
+
+    // Abre o arquivo minisudo_password no diretório temporário ./config
     let file = match File::open("./config/minisudo_password") {
         Ok(f) => f,
         Err(_) => {
@@ -46,7 +42,7 @@ fn main() {
 
     let mut hash_encontrado: Option<String> = None;
 
-    //Leitura do arquivo  
+    // Lê o arquivo linha por linha para encontrar o hash do usuário
     for linha in reader.lines() {
         if let Ok(line) = linha {
             let partes: Vec<&str> = line.trim().split(':').collect();
@@ -61,7 +57,7 @@ fn main() {
         }
     }
 
-    //Validação da senha
+    // Verifica se o hash foi encontrado
     let Some(hash) = hash_encontrado else {
         eprintln!("Usuário '{}' não está autorizado no minisudoers.", username);
         std::process::exit(1);
@@ -70,14 +66,15 @@ fn main() {
     let max_tentativas = 3;
     let mut autenticado = false;
 
-    for tentativa in 1..=max_tentativas {
+    // Solicita senha até 3 tentativas
+    for _ in 1..=max_tentativas {
         let senha = rpassword::prompt_password(
             format!("[minisudo] senha para {}: ", username)
         ).unwrap();
         if verify(&senha, &hash).unwrap_or(false) {
             autenticado = true;
             break;
-        } else { 
+        } else {
             eprintln!("Sinto muito, tente novamente.");
         }
     }
@@ -87,12 +84,12 @@ fn main() {
         std::process::exit(1);
     }
 
-    //Abre o arquivo minisudoers por caminho temporário
+    // Abre o arquivo minisudoers no diretório ./config
     let file = File::open("./config/minisudoers").expect("Erro ao abrir minisudoers");
     let reader = BufReader::new(file);
     let mut permitido = false;
 
-    //Realiza a leitura do arquivo minisudoers e verifica se o usuário tem permissão para executar o arquivo
+    // Verifica se o usuário tem permissão para o comando solicitado
     for linha in reader.lines() {
         if let Ok(line) = linha {
             let mut partes = line.trim().split_whitespace();
@@ -113,34 +110,34 @@ fn main() {
         std::process::exit(1);
     }
 
-    // Obter horário atual
+    // Obtem horário atual formatado
     let agora = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
-    // Montar comando completo
+    // Monta o comando completo com argumentos
     let comando_completo = format!("{} {}", args.comando, args.argumentos.join(" ")).trim().to_string();
 
-    // Montar entrada de log
+    // Monta a entrada de log
     let entrada_log = format!(
         "[{}] usuário: {}, comando: {}\n",
         agora, username, comando_completo
     );
 
-    // Abrir (ou criar) arquivo de log em modo append
+    // Garante que o diretório ./logs existe antes de gravar o log
+    // Isso evita erro se a pasta não existir
+    fs::create_dir_all("./logs").expect("Erro ao criar diretório de logs");
+
+    // Abre (ou cria) o arquivo de log em modo de adição (append)
     let mut arquivo_log = OpenOptions::new()
         .create(true)
         .append(true)
         .open("./logs/minisudo.log")
         .expect("Erro ao abrir ou criar o arquivo de log");
 
-    // Escrever no log
+    // Escreve a entrada no log
     if let Err(e) = arquivo_log.write_all(entrada_log.as_bytes()) {
         eprintln!("Erro ao escrever no log: {}", e);
     }
 
     println!("Acesso concedido.");
-    // Aqui você pode executar o comando desejado com privilégio
-            
-    // Simula a execução do comando passado pelo usuário
     println!("(simulado como root) Comando '{}' executado com sucesso!", args.comando);
-
 }
