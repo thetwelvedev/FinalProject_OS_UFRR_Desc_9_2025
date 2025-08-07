@@ -41,7 +41,7 @@ fn erro_de_senha() {
     // Senha errada
     let hash_errada = bcrypt::hash("senha", bcrypt::DEFAULT_COST).unwrap();
 
-    let (dir, minisudoers_path, password_path) =
+    let (_dir, minisudoers_path, password_path) =
         criar_ambiente("teste_usuario_senha_errada", &hash_errada, "ls");
 
     let mut cmd = Command::cargo_bin("minisudo").unwrap();
@@ -63,7 +63,7 @@ fn comando_negado() {
     // Hash gerado para a senha "1234"
     let hash_1234 = bcrypt::hash("1234", bcrypt::DEFAULT_COST).unwrap();
 
-    let (dir, minisudoers_path, password_path) =
+    let (_dir, minisudoers_path, password_path) =
         criar_ambiente("teste_usuario", &hash_1234, "ls");
 
     let mut cmd = Command::cargo_bin("minisudo").unwrap();
@@ -83,7 +83,7 @@ fn execucao_sucesso() {
     // Usuário com permissão para ALL
     let hash_1234 = bcrypt::hash("1234", bcrypt::DEFAULT_COST).unwrap();
 
-    let (dir, minisudoers_path, password_path) =
+    let (_dir, minisudoers_path, password_path) =
         criar_ambiente("teste_usuario", &hash_1234, "ALL");
 
     let mut cmd = Command::cargo_bin("minisudo").unwrap();
