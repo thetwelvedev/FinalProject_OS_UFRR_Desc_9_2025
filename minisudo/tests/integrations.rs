@@ -25,7 +25,7 @@ fn usuario_nao_autorizado_falha() {
     let (_dir, minisudoers_path, password_path) =
         criar_ambiente("usuario_ficticio", "$2b$12$abcdefghijklmnopqrstuv", "ls");
 
-    let mut cmd = Command::cargo_bin("test_minisudo").unwrap();
+    let mut cmd = Command::cargo_bin("minisudo").unwrap();
     cmd.env("MINISUDO_TEST_USER", "teste_usuario")
         .env("MINISUDOERS_PATH", minisudoers_path)
         .env("MINISUDO_PASSWORD_PATH", password_path)
@@ -44,7 +44,7 @@ fn erro_de_senha() {
     let (dir, minisudoers_path, password_path) =
         criar_ambiente("teste_usuario_senha_errada", &hash_errada, "ls");
 
-    let mut cmd = Command::cargo_bin("test_minisudo").unwrap();
+    let mut cmd = Command::cargo_bin("minisudo").unwrap();
     cmd.env("MINISUDO_TEST_USER", "teste_usuario_senha_errada")
         .env("MINISUDOERS_PATH", minisudoers_path)
         .env("MINISUDO_PASSWORD_PATH", password_path)
@@ -66,7 +66,7 @@ fn comando_negado() {
     let (dir, minisudoers_path, password_path) =
         criar_ambiente("teste_usuario", &hash_1234, "ls");
 
-    let mut cmd = Command::cargo_bin("test_minisudo").unwrap();
+    let mut cmd = Command::cargo_bin("minisudo").unwrap();
     cmd.env("MINISUDO_TEST_USER", "teste_usuario")
         .env("MINISUDOERS_PATH", minisudoers_path)
         .env("MINISUDO_PASSWORD_PATH", password_path)
@@ -86,7 +86,7 @@ fn execucao_sucesso() {
     let (dir, minisudoers_path, password_path) =
         criar_ambiente("teste_usuario", &hash_1234, "ALL");
 
-    let mut cmd = Command::cargo_bin("test_minisudo").unwrap();
+    let mut cmd = Command::cargo_bin("minisudo").unwrap();
     cmd.env("MINISUDO_TEST_USER", "teste_usuario")
         .env("MINISUDOERS_PATH", minisudoers_path)
         .env("MINISUDO_PASSWORD_PATH", password_path)
