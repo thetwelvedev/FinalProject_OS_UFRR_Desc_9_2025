@@ -20,18 +20,57 @@ struct Cli {
 fn main() {
     let args = Cli::parse();
 
-    // Pega o ID do usuário atual do sistema
-    let uid = get_current_uid();
-
-    // Verifica se o usuário é válido
-    let Some(user) = get_user_by_uid(uid) else {
-        eprintln!("Erro: Usuário não encontrado!");
-        std::process::exit(1);
+    //Verifica se não existe usuário temporario para uso do cargo test.
+    let username = if let Ok(fake_user) = std::env::var("MINISUDO_TEST_USER") {
+        fake_user
+    } else {
+        // Pega o ID do usuário atual do sistema
+        let uid = get_current_uid();
+        // Verifica se o usuário é válido
+        let Some(user) = get_user_by_uid(uid) else {
+            eprintln!("Erro: Usuário não encontrado!");
+            std::process::exit(1);
+        };
+        user.name().to_string_lossy().into_owned()
     };
-    let username = user.name().to_string_lossy().into_owned();
+
+
+    // Verifica se existe caminho temporário para uso de cargo test
+    let minisudoers_path = std::env::var("MINISUDOERS_PATH")
+    .unwrap_or_else(|_| "./config/minisudoers".to_string());
+
+    // Abre o arquivo minisudoers no diretório ./config
+    let file = File::open(&minisudoers_path).expect("Erro ao abrir minisudoers");
+    let reader = BufReader::new(file);
+    let mut permitido = false;
+
+    // Verifica se o usuário tem permissão para o comando solicitado
+    for linha in reader.lines() {
+        if let Ok(line) = linha {
+            let mut partes = line.trim().split_whitespace();
+            if let Some(user_entry) = partes.next() {
+                if user_entry == username {
+                    let comandos: Vec<&str> = partes.collect();
+                    if comandos.contains(&"ALL") || comandos.contains(&args.comando.as_str()) {
+                        permitido = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    if !permitido {
+        eprintln!("Sinto muito, usuário {} não tem permissão para executar '{}' como root.", username ,args.comando);
+        std::process::exit(1);
+    }
+
+    // Verifica se existe caminho temporário para uso de cargo test
+    let minisudo_password_path = std::env::var("MINISUDO_PASSWORD_PATH")
+    .unwrap_or_else(|_| "./config/minisudo_password".to_string());
 
     // Abre o arquivo minisudo_password no diretório temporário ./config
-    let file = match File::open("./config/minisudo_password") {
+    let file = match File::open(&minisudo_password_path) {
         Ok(f) => f,
         Err(_) => {
             eprintln!("Erro: Não foi possível abrir o arquivo minisudo_password.");
@@ -68,9 +107,17 @@ fn main() {
 
     // Solicita senha até 3 tentativas
     for _ in 1..=max_tentativas {
-        let senha = rpassword::prompt_password(
-            format!("[minisudo] senha para {}: ", username)
-        ).unwrap();
+        // Verifica se cargo test esta em execucao e faz leitura via stdin
+        let senha = if std::env::var("MINISUDO_TEST_USER").is_ok() {
+            let mut buffer = String::new();
+            std::io::stdin().read_line(&mut buffer).unwrap();
+            buffer.trim().to_string()
+        } else {//Leitura normal via rpassword
+            rpassword::prompt_password(
+                format!("[minisudo] senha para {}: ", username)
+            ).unwrap()
+        };
+            
         if verify(&senha, &hash).unwrap_or(false) {
             autenticado = true;
             break;
@@ -81,32 +128,6 @@ fn main() {
 
     if !autenticado {
         eprintln!("minisudo: 3 tentativas de senha incorreta.");
-        std::process::exit(1);
-    }
-
-    // Abre o arquivo minisudoers no diretório ./config
-    let file = File::open("./config/minisudoers").expect("Erro ao abrir minisudoers");
-    let reader = BufReader::new(file);
-    let mut permitido = false;
-
-    // Verifica se o usuário tem permissão para o comando solicitado
-    for linha in reader.lines() {
-        if let Ok(line) = linha {
-            let mut partes = line.trim().split_whitespace();
-            if let Some(user_entry) = partes.next() {
-                if user_entry == username {
-                    let comandos: Vec<&str> = partes.collect();
-                    if comandos.contains(&"ALL") || comandos.contains(&args.comando.as_str()) {
-                        permitido = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    if !permitido {
-        eprintln!("Permissão negada: você não pode executar '{}'", args.comando);
         std::process::exit(1);
     }
 
