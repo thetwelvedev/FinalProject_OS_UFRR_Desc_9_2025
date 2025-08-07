@@ -1,2 +1,3 @@
 root ALL
 alefealves apt dnf ls
+lv12 apt dnf ls
